@@ -59,12 +59,16 @@ class Metrics:
         cmd_vel = pd.read_csv(self.dir + "/cmd_vel.csv", converters={
             "data": Utils.string_to_float_list
         })
+        start_goal = pd.read_csv(self.dir + "/start_goal.csv", converters={
+            "start": Utils.string_to_float_list,
+            "goal": Utils.string_to_float_list
+        })
 
         laserscan = laserscan.rename(columns={"data": "laserscan"})
         odom = odom.rename(columns={"data": "odom"})
         cmd_vel = cmd_vel.rename(columns={"data": "cmd_vel"})
 
-        data = pd.concat([episode, laserscan, odom, cmd_vel], axis=1, join="inner")
+        data = pd.concat([episode, laserscan, odom, cmd_vel, start_goal], axis=1, join="inner")
         data = data.loc[:,~data.columns.duplicated()].copy()
 
         i = 0
@@ -89,7 +93,6 @@ class Metrics:
         positions, velocities = [], []
 
         for odom in episode["odom"]:
-            # print(odom)
             positions.append(np.array(odom["position"]))
             velocities.append(np.array(odom["velocity"]))
 
@@ -109,15 +112,18 @@ class Metrics:
 
         time = int(list(episode["time"])[-1] - list(episode["time"])[0])
 
+        start_position = self.get_mean_position(episode, "start")
+        goal_position = self.get_mean_position(episode, "goal")
+
         return {
-            "curvature": curvature,
-            "normalized_curvature": normalized_curvature,
-            "roughness": roughness,
-            "path_length_values": path_length_per_step,
+            "curvature": Metrics.round_values(curvature),
+            "normalized_curvature": Metrics.round_values(normalized_curvature),
+            "roughness": Metrics.round_values(roughness),
+            "path_length_values": Metrics.round_values(path_length_per_step),
             "path_length": path_length,
-            "acceleration": acceleration,
-            "jerk": jerk,
-            "velocity": vel_absolute,
+            "acceleration": Metrics.round_values(acceleration),
+            "jerk": Metrics.round_values(jerk),
+            "velocity": Metrics.round_values(vel_absolute),
             "collision_amount": collision_amount,
             "collisions": list(collisions),
             "path": [list(p) for p in positions],
@@ -128,19 +134,23 @@ class Metrics:
             "time": list(map(int, episode["time"].tolist())),
             "episode": index,
             "result": self.get_success(time, collision_amount),
-            "cmd_vel": list(map(list, episode["cmd_vel"].to_list()))
+            "cmd_vel": list(map(list, episode["cmd_vel"].to_list())),
+            "goal": goal_position,
+            "start": start_position
         }
 
-    # def get_array_metrics(self, arr):
-    #     return {
-    #         "values": list(arr),
-    #         "sum": np.sum(arr),
-    #         "mean": np.mean(arr),
-    #         "max": np.max(arr),
-    #         "min": np.min(arr)
-    #     }
+    def get_mean_position(self, episode, key):
+        positions = episode[key].to_list()
+        counter = {}
 
+        for p in positions:
+            hash = ":".join([str(pos) for pos in p])
 
+            counter[hash] = counter.get(hash, 0) + 1
+
+        sorted_positions = dict(sorted(counter.items(), key=lambda x: x))
+
+        return [float(r) for r in list(sorted_positions.keys())[0].split(":")]
 
     def get_position_for_collision(self, collisions, positions):
         for i, collision in enumerate(collisions):
@@ -317,6 +327,10 @@ class Metrics:
         )
 
         return curvature, normalized
+
+    @staticmethod
+    def round_values(values, digits=3):
+        return [round(v, digits) for v in values]
 
     @staticmethod
     def calc_roughness(first, second, third):

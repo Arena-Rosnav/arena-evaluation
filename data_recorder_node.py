@@ -152,6 +152,7 @@ class Recorder:
             )
 
         self.write_data("episode", ["time", "episode"], mode="w")
+        self.write_data("start_goal", ["episode", "start", "goal"], mode="w")
 
         self.current_episode = 0
 
@@ -186,6 +187,11 @@ class Recorder:
             self.write_data(topic_name, [self.current_time, data])
         
         self.write_data("episode", [self.current_time, self.current_episode])
+        self.write_data("start_goal", [
+            self.current_episode, 
+            rospy.get_param(rospy.get_namespace() + "start", [0, 0, 0]), 
+            rospy.get_param(rospy.get_namespace() + "goal", [0, 0, 0])
+        ])
 
     def read_config(self):
         with open(self.dir + "/data_recorder_config.yaml") as file:
@@ -212,7 +218,7 @@ class Recorder:
             writer = csv.writer(file, delimiter = ',')
             writer.writerow(data)
             file.close()
-
+    
     def write_params(self):
         with open(self.result_dir + "/params.yaml", "w") as file:
             yaml.dump({
