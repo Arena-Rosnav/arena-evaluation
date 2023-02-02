@@ -5,8 +5,6 @@ import os
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
-from matplotlib.path import Path
-import matplotlib.patches as patches
 import json
 import yaml
 
@@ -14,10 +12,7 @@ from utils import Utils
 
 """
     TODO: 
-    - Create plot titles
-    - Check if all legends are added
     - Add collisions to path map
-    - Add support for declaration file to declare which data should be plotted and what plots should be used
 """
 
 

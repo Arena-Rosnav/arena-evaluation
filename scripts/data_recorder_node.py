@@ -13,6 +13,7 @@ import re
 from rosgraph_msgs.msg import Clock
 from rospy.core import traceback
 import rostopic
+import rospkg
 import subprocess
 from datetime import datetime
 import rosparam
@@ -107,7 +108,7 @@ class Recorder:
     def __init__(self):
         self.model = rospy.get_param(os.path.join(rospy.get_namespace(), "model"), "")
 
-        self.dir = os.path.dirname(os.path.abspath(__file__))
+        self.dir = rospkg.RosPack().get_path("arena-evaluation")
         self.result_dir = os.path.join(self.dir, "data", datetime.now().strftime("%d-%m-%Y_%H-%M-%S")) + "_" + rospy.get_namespace().replace("/", "")
 
         try:
@@ -232,7 +233,7 @@ class Recorder:
 
 
 if __name__=="__main__":
-    rospy.init_node("data_recorder") 
+    rospy.init_node("data_recorder", anonymous=True) 
 
     time.sleep(5)   
 

@@ -6,3 +6,5 @@ test.ipynb
 /**/__pycache__
 /data/**
 !/data/.gitkeep
+/plots/**
+!/plots/.gitkeep
