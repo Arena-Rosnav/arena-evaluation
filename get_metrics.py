@@ -336,6 +336,9 @@ class Metrics:
     def calc_roughness(first, second, third):
         triangle_area = Metrics.calc_triangle_area(first, second, third)
 
+        if np.abs(np.linalg.norm(third - first)) == 0:
+            return 0
+
         return 2 * triangle_area / np.abs(np.linalg.norm(third - first)) ** 2
 
     @staticmethod

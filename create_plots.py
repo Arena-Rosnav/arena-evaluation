@@ -2,6 +2,7 @@ import seaborn as sns
 import pandas as pd
 import rospkg
 import os
+import traceback
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
@@ -50,12 +51,15 @@ def assert_cat_plot(key):
 def assert_datakey_valid(key, valid_keys):
     assert key in valid_keys, f"Key {key} not valid"
 
-def plot(title, save_name):
-    plt.legend()
+def plot(title, save_name, show_legend=True):
+    if show_legend:
+        plt.legend()
+
     plt.title(title)
 
     if os.environ.get(SHOULD_SAVE_PLOTS_KEY, "False") == "True":
-        plt.savefig(os.path.join(os.environ.get(SAVE_PLOTS_LOCATION), save_name + ".pdf"))
+        print("SAVING PLOT")
+        plt.savefig(os.path.join(os.environ.get(SAVE_PLOTS_LOCATION, "plots"), save_name + ".pdf"))
     else:
         plt.show()
 
@@ -140,25 +144,31 @@ def read_datasets(data_paths):
 
 class ResultPlotter:
     @staticmethod
-    def countplot_for_result(dataset, hue="namespace", title="Results", save_name="results", plot_args={}):
+    def countplot_for_result(dataset, hue="local_planner", title="Results", save_name="results", plot_args={}):
         """
             Shows the results for every episode in a count plot to compare
             with different robots
         """
+        print(dataset["result"])
+        print(hue, title, save_name)
+
         sns.countplot(data=dataset, x="result", hue=hue, **plot_args)
 
         plot(title, save_name)
 
     @staticmethod
     def plot_result_from_declaration(dataset, result_declaration):
+        print("PLOT RESULT", result_declaration)
+
         if result_declaration == None:
             return
 
         ResultPlotter.countplot_for_result(
             dataset,
-            result_declaration["title"],    
-            result_declaration["save_name"],    
-            result_declaration.get("plot_args", {}),    
+            hue=result_declaration["hue"],
+            title=result_declaration["title"],    
+            save_name=result_declaration["save_name"],    
+            plot_args=result_declaration.get("plot_args", {}),    
         )
 
 ## FOR TIME STEP VALUES -> ARRAYS FOR EACH EPISODE
@@ -205,11 +215,12 @@ class EpisodeArrayValuePlotter:
 
         local_data = local_data.explode([data_key, "time"]).reset_index()
 
-        sns.lineplot(data=local_data, y=data_key, x="time", hue=hue, **plot_args)
+        sns.lineplot(data=local_data, y=data_key, x="time", hue=hue)
+        plt.xlabel(plot_args["xlabel"])
 
         plot(title, save_name)
 
-    def distplot_for_single_episode(dataset, data_key, title, save_name, episode=0, plot_key="swarm", plot_args={}):
+    def distplot_for_single_episode(dataset, data_key, title, save_name, episode=0, hue="local_planner", plot_key="swarm", plot_args={}):
         """
             Create a distributional plot for a single episode
         """
@@ -217,11 +228,11 @@ class EpisodeArrayValuePlotter:
 
         assert_dist_plot(plot_key)
 
-        local_data = dataset[dataset["episode"] == episode][[data_key, "namespace"]].explode(data_key)
+        local_data = dataset[dataset["episode"] == episode][[data_key, hue]].explode(data_key)
 
-        DIST_PLOTS[plot_key](data=local_data, y=data_key, x="namespace", **plot_args)
+        DIST_PLOTS[plot_key](data=local_data, y=data_key, x=hue, **plot_args)
 
-        plot(title, save_name)
+        plot(title, save_name, False)
 
     def distplot_for_aggregated(dataset, data_key, aggregate_callback, title, save_name, differentiate="namespace", plot_key="swarm", plot_args={}):
         assert_datakey_valid(data_key, EpisodeArrayValuePlotter.POSSIBLE_DATA_KEYS)
@@ -292,7 +303,7 @@ class DiscreteValuePlotter:
 
         DIST_PLOTS[plot_key](data=dataset.reset_index(), y=data_key, x=differentiate, **plot_args)
 
-        plot(title, save_name)
+        plot(title, save_name, False)
 
 
 ## FOR SHOWING PATH THE ROBOT TOOK
@@ -300,35 +311,42 @@ class DiscreteValuePlotter:
 class PathVisualizer:
 
     def __init__(self, scenario):
-        self.scenario_file, self.scenario_content = PathVisualizer.read_scenario_file(scenario)
+        # self.scenario_file, self.scenario_content = PathVisualizer.read_scenario_file(scenario)
 
-        self.map_name = self.scenario_content["map"]
+        self.map_name = "small_warehouse" # self.scenario_content["map"]
         self.map_path, self.map_content = PathVisualizer.read_map_file(self.map_name)
 
         print(self.map_content)
 
     def create_map_plot(self):
-        map_img = plt.imread(os.path.join(self.map_path, self.map_content["image"]))
+        self.map_img = plt.imread(os.path.join(self.map_path, self.map_content["image"]), )
 
         fig, ax = plt.subplots()
 
-        ax.imshow(map_img)
+        ax.imshow(self.map_img, cmap="gray")
 
         return fig, ax
 
-    def create_episode_plots_for_namespaces(self, dataset, title, save_name, desired_results=[], should_add_obstacles=False, should_add_collisions=False):
-        robots_tested = list(set(dataset["namespace"].to_list()))
+    def create_episode_plots_for_namespaces(self, dataset, title, save_name, episode=0, differentiate="local_planner", desired_results=[], should_add_obstacles=False, should_add_collisions=False):
+        robots_tested = list(set(dataset[differentiate].to_list()))
 
         plt.close()
 
-        for namespace in robots_tested:
-            fig, ax = self.create_map_plot()
+        fig, ax = self.create_map_plot()
 
-            paths_for_namespace = dataset[dataset["namespace"] == namespace][["path", "result", "start", "goal"]]
+        for namespace in robots_tested:
+            print(namespace)
+
+            paths_for_namespace = dataset[dataset[differentiate] == namespace][["path", "result", "start", "goal"]]
 
             path_amount = len(paths_for_namespace.index)
 
-            for i in range(path_amount):
+            iterator = list(range(path_amount))
+
+            if episode != None:
+                iterator = [episode]
+
+            for i in iterator:
                 path = paths_for_namespace["path"][i]
                 result = paths_for_namespace["result"][i]
 
@@ -337,46 +355,40 @@ class PathVisualizer:
 
                 path = np.array(list(map(self.ros_to_real_coord, path))).transpose()
 
-                ax.plot(path[0][:-10], path[1][:-10], label="Episode: " + str(i))
+                ax.plot(path[0][:-10], path[1][:-10], label=namespace)
 
-            self.add_obstacles_to_plot(should_add_obstacles)
+        self.add_obstacles_to_plot(should_add_obstacles)
 
-            self.add_start_and_goal_to_plot(ax, paths_for_namespace["start"][0], paths_for_namespace["goal"][0])
+        self.add_start_and_goal_to_plot(ax, paths_for_namespace["start"][0], paths_for_namespace["goal"][0])
 
-            plot(title, save_name)
+        plot(title, save_name)
 
 
-    def create_best_plots(self, dataset, should_add_obstacles=True, should_add_collisions=False):
+    def create_best_plots(self, dataset, title, save_name, should_add_obstacles=True, should_add_collisions=False):
         """
             - Only plot the paths were the goal is reached
             - Plot the path that took the least amount of time
         """
         possible_paths = dataset[dataset["result"] == "GOAL_REACHED"]
 
-        namespaces = list(set(possible_paths["namespace"].to_list()))
+        namespaces = list(set(possible_paths["local_planner"].to_list()))
 
         fig, ax = self.create_map_plot()
 
         for namespace in namespaces:
-            paths_for_namespace = possible_paths[possible_paths["namespace"] == namespace]
+            paths_for_namespace = possible_paths[possible_paths["local_planner"] == namespace]
             
             minimal_path = paths_for_namespace[paths_for_namespace["time_diff"] == paths_for_namespace["time_diff"].min()][["path", "start", "goal"]].reset_index()
-
-            print(minimal_path)
 
             path = np.array(list(map(self.ros_to_real_coord, minimal_path["path"][0]))).transpose()
 
             ax.plot(path[0][:-10], path[1][:-10], label=namespace)
 
-            self.add_start_and_goal_to_plot(ax, minimal_path["start"][0], minimal_path["goal"][0])
+        self.add_start_and_goal_to_plot(ax, minimal_path["start"][0], minimal_path["goal"][0])
         
         self.add_obstacles_to_plot(ax, should_add_obstacles)
 
-        # TODO CREATE PLOT TITLE
-
-        plt.legend()
-        plt.show()
-        plt.close()
+        plot(title, save_name)
 
     def add_obstacles_to_plot(self, ax, should_add_obstacles=False):
         if not should_add_obstacles:
@@ -399,8 +411,6 @@ class PathVisualizer:
             ax.plot(x, y, "x--", lw=1, color="black", ms=10, alpha=0.4)
 
     def add_start_and_goal_to_plot(self, ax, start, goal):
-        print(start)
-
         start = self.ros_to_real_coord(start)
 
         ax.plot(start[0], start[1], "x", label="Start", ms=10, color="green")
@@ -411,7 +421,7 @@ class PathVisualizer:
 
     @staticmethod
     def read_scenario_file(scenario):
-        name = os.path.join(rospkg.RosPack().get_path("task-generator"), "scenarios", scenario)
+        name = os.path.join(rospkg.RosPack().get_path("task_generator"), "scenarios", scenario)
 
         with open(name) as file:
             content = yaml.safe_load(file)
@@ -428,7 +438,11 @@ class PathVisualizer:
         return map_path, content
 
     def ros_to_real_coord(self, coord):
-        return [i / self.map_content["resolution"] for i in coord][:2]
+        new_coord = [(c - self.map_content["origin"][i]) / self.map_content["resolution"] for i, c in enumerate(coord)][:2]
+
+        new_coord[1] = - new_coord[1] + self.map_img.shape[1] # - (self.map_content["origin"][0] / self.map_content["resolution"])
+
+        return new_coord
 
 
 def create_plots_from_declaration_file(declaration_file):
@@ -438,12 +452,13 @@ def create_plots_from_declaration_file(declaration_file):
 
     if not show_plots:
         os.environ[SHOULD_SAVE_PLOTS_KEY] = "True"
-        location = os.path.join("path", declaration_file["save_location"])
+        location = os.path.join("plots", declaration_file.get("save_location", ""))
         os.environ[SAVE_PLOTS_LOCATION] = location
 
         try:
             os.mkdir(location)
         except:
+            traceback.print_exc()
             print("Path", location, "cannot be created")
 
     ## Dataset setup
@@ -452,7 +467,7 @@ def create_plots_from_declaration_file(declaration_file):
 
     ## Plot Result
 
-    ResultPlotter(dataset, declaration_file.get("result", None))
+    ResultPlotter.plot_result_from_declaration(dataset, declaration_file.get("results", None))
     
     ## Plot time step values
 
@@ -478,6 +493,7 @@ def create_plots_from_declaration_file(declaration_file):
             line["data_key"],
             line["title"],
             line["save_name"],
+            hue=line["hue"],
             episode=line["episode"],
             plot_key=line.get("plot_key", "swarm"),
             plot_args=line.get("plot_args", {})
@@ -518,6 +534,7 @@ def create_plots_from_declaration_file(declaration_file):
             line["data_key"], 
             line["title"],
             line["save_name"],
+            differentiate=line["differentiate"],
             plot_key=line["plot_key"],
             plot_args=line.get("plot_args", {})
         )
@@ -530,6 +547,7 @@ def create_plots_from_declaration_file(declaration_file):
             line["data_key"], 
             line["title"],
             line["save_name"],
+            differentiate=line["differentiate"],
             plot_key=line["plot_key"],
             plot_args=line.get("plot_args", {})
         )
@@ -538,19 +556,20 @@ def create_plots_from_declaration_file(declaration_file):
 
     path_visualizer = PathVisualizer(scenario)
 
-    episode_plots_for_namespaces = declaration_file.get(episode_plots_for_namespaces, None)
+    episode_plots_for_namespaces = declaration_file.get("episode_plots_for_namespaces", None)
 
     if episode_plots_for_namespaces != None:
         path_visualizer.create_episode_plots_for_namespaces(
             dataset, 
             episode_plots_for_namespaces["title"],
             episode_plots_for_namespaces["save_name"],
+            differentiate=episode_plots_for_namespaces["differentiate"],
             desired_results=episode_plots_for_namespaces["desired_results"],
             should_add_obstacles=episode_plots_for_namespaces.get("should_add_obstacles", False),
             should_add_collisions=episode_plots_for_namespaces.get("should_add_collisions", False),
         )
 
-    create_best_plots = declaration_file.get(create_best_plots, None)
+    create_best_plots = declaration_file.get("create_best_plots", None)
 
     if create_best_plots != None:
         path_visualizer.create_best_plots(
