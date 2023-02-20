@@ -144,28 +144,23 @@ def read_datasets(data_paths):
 
 class ResultPlotter:
     @staticmethod
-    def countplot_for_result(dataset, hue="local_planner", title="Results", save_name="results", plot_args={}):
+    def countplot_for_result(dataset, differentiate="local_planner", title="Results", save_name="results", plot_args={}):
         """
             Shows the results for every episode in a count plot to compare
             with different robots
         """
-        print(dataset["result"])
-        print(hue, title, save_name)
-
-        sns.countplot(data=dataset, x="result", hue=hue, **plot_args)
+        sns.countplot(data=dataset, x="result", hue=differentiate, **plot_args)
 
         plot(title, save_name)
 
     @staticmethod
     def plot_result_from_declaration(dataset, result_declaration):
-        print("PLOT RESULT", result_declaration)
-
         if result_declaration == None:
             return
 
         ResultPlotter.countplot_for_result(
             dataset,
-            hue=result_declaration["hue"],
+            differentiate=result_declaration["hue"],
             title=result_declaration["title"],    
             save_name=result_declaration["save_name"],    
             plot_args=result_declaration.get("plot_args", {}),    
@@ -193,20 +188,20 @@ class EpisodeArrayValuePlotter:
         "velocity"
     ]
 
-    def lineplot_for_single_episode(dataset, data_key, title, save_name, step_size=5, hue="namespace", episode=None, plot_args={}):
+    def lineplot_for_single_episode(dataset, data_key, title, save_name, step_size=5, differentiate="namespace", episode=None, plot_args={}):
         """
             Creates a lineplot to visualize the values for a single episode.
 
             Args:
                 data_key: str -> Name of the coloumn you want to plot
                 step_size: int -> Number of values that should be skipped when plotting to reduce data size
-                hue: str -> Name of the coloumn to differentiate
+                differentiate: str -> Name of the coloumn to differentiate
                 episode: int | None -> Index of the episode, if none then plot mean of all episodes
                 plot_args: dict -> further plot arguments
         """
         assert_datakey_valid(data_key, EpisodeArrayValuePlotter.POSSIBLE_DATA_KEYS)
 
-        local_data = dataset[[data_key, hue, "time", "episode"]]
+        local_data = dataset[[data_key, differentiate, "time", "episode"]]
 
         if episode != None:
             local_data = local_data[local_data["episode"] == episode]
@@ -215,12 +210,12 @@ class EpisodeArrayValuePlotter:
 
         local_data = local_data.explode([data_key, "time"]).reset_index()
 
-        sns.lineplot(data=local_data, y=data_key, x="time", hue=hue)
+        sns.lineplot(data=local_data, y=data_key, x="time", hue=differentiate)
         plt.xlabel(plot_args["xlabel"])
 
         plot(title, save_name)
 
-    def distplot_for_single_episode(dataset, data_key, title, save_name, episode=0, hue="local_planner", plot_key="swarm", plot_args={}):
+    def distplot_for_single_episode(dataset, data_key, title, save_name, episode=0, differentiate="local_planner", plot_key="swarm", plot_args={}):
         """
             Create a distributional plot for a single episode
         """
@@ -228,9 +223,9 @@ class EpisodeArrayValuePlotter:
 
         assert_dist_plot(plot_key)
 
-        local_data = dataset[dataset["episode"] == episode][[data_key, hue]].explode(data_key)
+        local_data = dataset[dataset["episode"] == episode][[data_key, differentiate]].explode(data_key)
 
-        DIST_PLOTS[plot_key](data=local_data, y=data_key, x=hue, **plot_args)
+        DIST_PLOTS[plot_key](data=local_data, y=data_key, x=differentiate, **plot_args)
 
         plot(title, save_name, False)
 
@@ -480,7 +475,7 @@ def create_plots_from_declaration_file(declaration_file):
             line["title"],
             line["save_name"],
             step_size=line.get("step_size", 5),
-            hue=line.get("hue", "namespace"),
+            differentiate=line.get("differentiate", "namespace"),
             episode=line.get("episode", None),
             plot_args=line.get("plot_args", {})
         )
@@ -493,7 +488,7 @@ def create_plots_from_declaration_file(declaration_file):
             line["data_key"],
             line["title"],
             line["save_name"],
-            hue=line["hue"],
+            differentiate=line["differentiate"],
             episode=line["episode"],
             plot_key=line.get("plot_key", "swarm"),
             plot_args=line.get("plot_args", {})
@@ -508,6 +503,7 @@ def create_plots_from_declaration_file(declaration_file):
             aggregate_callbacks[line["aggregate"]],
             line["title"],
             line["save_name"],
+            differentiate=line.get("differentiate", "namespace"),
             plot_key=line.get("plot_key", "swarm"),
             plot_args=line.get("plot_args", {})
         )
@@ -521,6 +517,7 @@ def create_plots_from_declaration_file(declaration_file):
             aggregate_callbacks[line["aggregate"]],
             line["title"],
             line["save_name"],
+            differentiate=line.get("differentiate", "namespace"),
             plot_args=line.get("plot_args", {})
         )
 

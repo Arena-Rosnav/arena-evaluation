@@ -1,5 +1,3 @@
-```yaml
-
 # Wether you want to show or save the plots
 show_plots: boolean
 # Name of the directory in ./path
@@ -17,6 +15,8 @@ results:
     title: string
     # Name of the file the plot should be saved ot
     save_name: string
+    # Denotes which data should be shown seperately for a single planner
+    differentiate: key in Dataset
     # Additional Plot arguments
     plot_args: {} # Optional
 
@@ -41,7 +41,8 @@ single_episode_line:
     # Number of values that should be skipped to reduce datapoints
     step_size: int # Optional -> Defaults to 5
     # Coloumn for differentiation
-    hue: "namespace" # Optional -> Defaults to namespace
+    # Denotes which data should be shown seperately for a single planner
+    differentiate: key in Dataset
     # Index of the episode -> If none all episodes are plotted
     episode: int # Optional -> Defaults to none
     title: string
@@ -52,6 +53,8 @@ single_episode_line:
 single_episode_distribution:
   - data_key: string
     episode: int
+    # Denotes which data should be shown seperately for a single planner
+    differentiate: key in Dataset
     plot_key: "swarm" | "violin" | "box" | "boxen" | "strip" # Optional -> Defaults to "swarm"
     title: string
     save_name: string
@@ -60,6 +63,8 @@ single_episode_distribution:
 #   Like a line plot for the max value of each episode
 aggregated_distribution:
   - data_key: string
+    # Denotes which data should be shown seperately for a single planner
+    differentiate: key in Dataset
     # Function that should be used for aggregation. We offer: max, min, mean
     aggregate: "max" | "min" | "mean" | "sum"
     # Name of the dist plot you want to use. Can be strip, swarm, box, boxen, violin
@@ -70,6 +75,8 @@ aggregated_distribution:
 # - A distributional plot for aggregated values for all episodes.
 aggregated_line:
   - data_key: string
+    # Denotes which data should be shown seperately for a single planner
+    differentiate: key in Dataset
     # Function that should be used for aggregation. We offer: max, min, mean
     aggregate: "max" | "min" | "mean" | "sum"
     title: string
@@ -88,6 +95,8 @@ aggregated_line:
 # - A categorical plot over all episodes to show the values in a line or bar plot
 all_episodes_categorical:
   - data_key: string
+    # Denotes which data should be shown seperately for a single planner
+    differentiate: key in Dataset
     plot_key: "line" | "bar"
     title: string
     save_name: string
@@ -95,6 +104,8 @@ all_episodes_categorical:
 # - Plot a distribution over all episodes
 all_episodes_distribution:
   - data_key: string
+    # Denotes which data should be shown seperately for a single planner
+    differentiate: key in Dataset
     plot_key: "swarm" | "violin" | "box" | "boxen" | "strip" # Optional -> Defaults to "swarm"
     title: string
     save_name: string
@@ -123,5 +134,3 @@ create_best_plots:
     should_add_collisions: boolean # Optional -> Defaults to False
     title: string
     save_name: string
-
-```
