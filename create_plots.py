@@ -160,7 +160,7 @@ class ResultPlotter:
 
         ResultPlotter.countplot_for_result(
             dataset,
-            differentiate=result_declaration["hue"],
+            differentiate=result_declaration["differentiate"],
             title=result_declaration["title"],    
             save_name=result_declaration["save_name"],    
             plot_args=result_declaration.get("plot_args", {}),    

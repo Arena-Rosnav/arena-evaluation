@@ -78,7 +78,7 @@ class Metrics:
         while True:
             current_episode = data[data["episode"] == i]
 
-            if len(current_episode) <= 0:
+            if len(current_episode) <= 5:
                 break
             
             episode_data[i] = self.analyze_episode(current_episode, i)
@@ -86,8 +86,6 @@ class Metrics:
 
         data = pd.DataFrame(episode_data).transpose().set_index("episode")
         data.to_csv(os.path.join(dir, "metrics.csv"))
-
-        pass
 
     def analyze_episode(self, episode, index):
         positions, velocities = [], []
@@ -114,6 +112,8 @@ class Metrics:
 
         start_position = self.get_mean_position(episode, "start")
         goal_position = self.get_mean_position(episode, "goal")
+
+        print("PATH LENGTH", path_length, path_length_per_step)
 
         return {
             "curvature": Metrics.round_values(curvature),
