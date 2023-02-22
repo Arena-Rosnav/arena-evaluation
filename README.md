@@ -31,7 +31,25 @@ Record the data by setting `record_data:=true` when starting up the ros structur
 
 # Transform data and calculate metrics
 
-To transform the dataset for later plotting and calculate the metrics from the recorded data run `python get_metrics.py --dir <DIR>`, whereas `dir` is the directory which is created in the recording phase.
+To transform the dataset for later plotting and calculate the metrics from the recorded data run `python get_metrics.py --dir <DIR>`, whereas `dir` is the directory which is created in the recording phase. The metrics which are created are shown in the following table:
+
+| Name                 | Datatype                             | Description                                                                                                                               |
+| -------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| curvature            | Float[]                              | The curvature of the planner for each <br>timestep calculated with the [menger curvature](https://en.wikipedia.org/wiki/Menger_curvature) |
+| normalized curvature | Float[]                              | The curvature multiplied by the length of the<br> path for this specific part.                                                            |
+| roughness            | Float[]                              | Describes how sudden and abrupt the planner changes directions.                                                                           |
+| path length          | Float                                | The complete length of the part                                                                                                           |
+| path length values   | Float[]                              | The length of each path between two continuous timestamps                                                                                 |
+| acceleration         | Float[]                              | The acceleration of the robot. Calculated as the gradient between two velocities.                                                         |
+| jerk                 | Float[]                              | Describes the change in acceleration.                                                                                                     |
+| velocity             | Float[][]                            | The real velocity of the robot.                                                                                                           |
+| cmd_vel              | Float[][]                            | The robots desired velocity denoted by the planner                                                                                        |
+| collision amount     | Int                                  | Absolute amount of collisions in an episode.                                                                                              |
+| collisions           | Int[]                                | Index of the positions in which a collision occured.                                                                                      |
+| path                 | Float[][]                            | Array of positions in which the robot was located for specific timestamps.                                                                |
+| angle over length    | Float                                | The complete angle over the complete length of the path the robot took.                                                                   |
+| time diff            | Int                                  | The complete time of the episode.                                                                                                         |
+| result               | TIMEOUT \| GOAL_REACHED \| COLLISION | The reason the episode has ended.                                                                                                         |
 
 # Plot Data
 

@@ -24,7 +24,7 @@ results:
   plot: true
   # Title of the plot
   title: Results
-  hue: local_planner
+  differentiate: local_planner
   # Name of the file the plot should be saved ot
   save_name: results
   # Additional Plot arguments
@@ -50,7 +50,7 @@ single_episode_line:
     # Number of values that should be skipped to reduce datapoints
     step_size: 2 # Optional -> Defaults to 5
     # Coloumn for differentiation
-    hue: local_planner # Optional -> Defaults to namespace
+    differentiate: local_planner # Optional -> Defaults to namespace
     # Index of the episode -> If none all episodes are plotted
     episode: 1 # Optional -> Defaults to none
     title: Curvature
@@ -60,7 +60,7 @@ single_episode_line:
     # Number of values that should be skipped to reduce datapoints
     step_size: 2 # Optional -> Defaults to 5
     # Coloumn for differentiation
-    hue: local_planner # Optional -> Defaults to namespace
+    differentiate: local_planner # Optional -> Defaults to namespace
     # Index of the episode -> If none all episodes are plotted
     episode: 1 # Optional -> Defaults to none
     title: Roughness
@@ -70,7 +70,7 @@ single_episode_line:
     # Number of values that should be skipped to reduce datapoints
     step_size: 2 # Optional -> Defaults to 5
     # Coloumn for differentiation
-    hue: local_planner # Optional -> Defaults to namespace
+    differentiate: local_planner # Optional -> Defaults to namespace
     # Index of the episode -> If none all episodes are plotted
     episode: 1 # Optional -> Defaults to none
     title: Path Length
@@ -80,7 +80,7 @@ single_episode_line:
     # Number of values that should be skipped to reduce datapoints
     step_size: 2 # Optional -> Defaults to 5
     # Coloumn for differentiation
-    hue: local_planner # Optional -> Defaults to namespace
+    differentiate: local_planner # Optional -> Defaults to namespace
     # Index of the episode -> If none all episodes are plotted
     episode: 1 # Optional -> Defaults to none
     title: Acceleration
@@ -90,7 +90,7 @@ single_episode_line:
     # Number of values that should be skipped to reduce datapoints
     step_size: 2 # Optional -> Defaults to 5
     # Coloumn for differentiation
-    hue: local_planner # Optional -> Defaults to namespace
+    differentiate: local_planner # Optional -> Defaults to namespace
     # Index of the episode -> If none all episodes are plotted
     episode: 1 # Optional -> Defaults to none
     title: Jerk
@@ -100,7 +100,7 @@ single_episode_line:
     # Number of values that should be skipped to reduce datapoints
     step_size: 2 # Optional -> Defaults to 5
     # Coloumn for differentiation
-    hue: local_planner # Optional -> Defaults to namespace
+    differentiate: local_planner # Optional -> Defaults to namespace
     # Index of the episode -> If none all episodes are plotted
     episode: 1 # Optional -> Defaults to none
     title: Velocity
@@ -116,42 +116,42 @@ single_episode_distribution:
     plot_key: "box"
     title: Curvature
     save_name: dist_episode_curvature
-    hue: local_planner
+    differentiate: local_planner
     plot_args: {} # Optional
   - data_key: roughness
     episode: 1
     plot_key: "box"
     title: Roughness
     save_name: dist_episode_roughness
-    hue: local_planner
+    differentiate: local_planner
     plot_args: {} # Optional
   - data_key: path_length_values
     episode: 1
     plot_key: "box"
     title: Path Length
     save_name: dist_episode_path_length_values
-    hue: local_planner
+    differentiate: local_planner
     plot_args: {} # Optional
   - data_key: acceleration
     episode: 1
     plot_key: "box"
     title: Acceleration
     save_name: dist_episode_acceleration
-    hue: local_planner
+    differentiate: local_planner
     plot_args: {} # Optional
   - data_key: jerk
     episode: 1
     plot_key: "box"
     title: Jerk
     save_name: dist_episode_jerk
-    hue: local_planner
+    differentiate: local_planner
     plot_args: {} # Optional
   - data_key: velocity
     episode: 1
     plot_key: "box"
     title: Velocity
     save_name: dist_episode_velocity
-    hue: local_planner
+    differentiate: local_planner
     plot_args: {} # Optional
 
 # - A line plot showing aggregated values for all episodes.
