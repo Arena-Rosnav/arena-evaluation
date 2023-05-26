@@ -8,7 +8,10 @@ import argparse
 import matplotlib.pyplot as plt
 import json
 import yaml
+import sys
+import requests
 
+from get_metrics import Metrics
 from utils import Utils
 
 """
@@ -582,6 +585,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("declaration_file")
+    parser.add_argument("--is_webapp_docker", default=False)
 
     return parser.parse_args()
 
@@ -592,4 +596,30 @@ if __name__ == "__main__":
     with open(os.path.join("plot_declarations", args.declaration_file)) as file:
         declaration_file = yaml.safe_load(file)
 
-    create_plots_from_declaration_file(declaration_file)
+    for dataset in declaration_file.datasets:
+        ## Create metrics
+        Metrics(dataset)
+
+        pass
+    try:
+        create_plots_from_declaration_file(declaration_file)
+
+        ## Send Request to finish task
+    
+        if not args.is_webapp_docker:
+            sys.exit()
+
+        config = os.environ
+
+        requests.post(
+            os.path.join(
+                config["API_BASE_URL"],
+                config["FINISH_TASK_ENDPOINT"]
+            ),
+            json={ "taskId": config["TASK_ID"] },
+            headers={ config["APP_TOKEN"]: config["APP_TOKEN_KEY"] }            
+        )
+    except:
+        ## Send Abort message
+        pass
+
